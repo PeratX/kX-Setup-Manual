@@ -1,0 +1,70 @@
+;New microcode
+	name "BBE";
+	copyright "Copyright (c) 2008. samplehunter";
+	created "09/29/2008";
+	engine "kX";
+	comment "Simple Aural Exciter";
+	guid "b6f810e8-3ce2-474d-94e4-94ba90f91b55";
+
+	;amount: level of distortion(harmonics). ~50-70%
+	;wet: Be careful. Should be very small, 0-10% 
+
+input inl, inr
+output outl, outr
+control amount=0.5
+control wet=0.1
+control dry=1
+temp amt 
+temp tl, tr
+static sl1, sl2, sl3, sl4
+static sr1, sr2, sr3, sr4
+
+; code
+macs amt, 0, amount, 0x10
+
+;highpass 4taps
+macs sl1,sl2,0,0
+macs sl2,sl3,0,0
+macs sl3,sl4,0,0
+macs sl4,inl,0,0
+
+macs tl,0,sl4,-0.3333
+macs tl,tl,sl3,1
+macs tl,tl,sl2,-1
+macs tl,tl,sl1,0.3333
+
+macs sr1,sr2,0,0
+macs sr2,sr3,0,0
+macs sr3,sr4,0,0
+macs sr4,inr,0,0
+
+macs tr,0,sr4,-0.3333
+macs tr,tr,sr3,1
+macs tr,tr,sr2,-1
+macs tr,tr,sr1,0.3333
+
+log tl,tl,amt,0x0
+log tr,tr,amt,0x0
+
+macs tl,0,tl,wet
+macs tr,0,tr,wet
+
+macs outl,tl,inl,dry
+macs outr,tr,inr,dry
+
+end 
+          
+
+samplehunter 
+View Public Profile 
+Send a private message to samplehunter 
+Find More Posts by samplehunter 
+Add samplehunter to Your Contacts 
+
+samplehunter's System Specs 
+
+
+ 
+
+
+read more: Made a simple exciter in dane http://www.driverheaven.net/effects-dsp/170171-made-simple-exciter-dane.html#ixzz0b9sYJe4Y

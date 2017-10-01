@@ -1,0 +1,9 @@
+[Version]
+Signature="$CHICAGO$"
+Provider=peratx@itxtech.org
+
+[DefaultInstall]
+AddReg=kXStartupFix
+
+[kXStartupFix]
+HKLM, "SOFTWARE\Microsoft\Windows\CurrentVersion\Run", "kX Mixer", ,"C:\Program Files (x86)\kX Project\kxmixer.exe --startup"

@@ -1,0 +1,267 @@
+name "superspace fp v1.0";
+copyright "2009. stylus, http://stylus.siteboard.de"
+created ""
+engine "kX";
+comment "high end true stereo reverb, fat plate";
+guid "33d988c7-25ae-47b0-9587-e0b8c2b263e6";
+
+; late reverb algorithm from freeverb by "Jezar at Dreampoint"
+; early reflections from impulse response "lexicon 480l" 
+; true stereo
+
+; registers
+input in1, in2
+output out1, out2  
+static a0a, a1a, a2a, a3a, a4a, a5a, a6a, a7a, b1a, d1a, d2a, d3a, d4a, ea
+static a0b, a1b, a2b, a3b, a4b, a5b, a6b, a7b, b1b, d1b, d2b, d3b, d4b, eb
+static ap_q=0.5, f, ga, gb, h, ina, inb
+control input_level=0.7
+control early_level=0.25
+control late_decay=0.85
+control late_damp=1
+control late_level=0.5
+control lp_cut=1
+control lp_q=0
+control dry_wet=0.75
+
+xtramsize	25874
+
+; late reflections iir
+; left		
+xdelay write wrt0a at	0	
+xdelay read rd0a at		1556
+xdelay write wrt1a at	1557	
+xdelay read rd1a at		3173
+xdelay write wrt2a at	3174	
+xdelay read rd2a at		4664
+xdelay write wrt3a at	4665	
+xdelay read rd3a at		6086
+xdelay write wrt4a at	6087	
+xdelay read rd4a at		7363
+xdelay write wrt5a at	7364	
+xdelay read rd5a at		8719
+xdelay write wrt6a at	8720	
+xdelay read rd6a at		9907
+xdelay write wrt7a at	9908	
+xdelay read rd7a at		11023
+
+; right		
+xdelay write wrt0b at	11024	
+xdelay read rd0b at		12603
+xdelay write wrt1b at	12604	
+xdelay read rd1b at		14243
+xdelay write wrt2b at	14244	
+xdelay read rd2b at		15757
+xdelay write wrt3b at	15758	
+xdelay read rd3b at		17202
+xdelay write wrt4b at	17203	
+xdelay read rd4b at		18502
+xdelay write wrt5b at	18503	
+xdelay read rd5b at		19881
+xdelay write wrt6b at	19882	
+xdelay read rd6b at		21092
+xdelay write wrt7b at	21093	
+xdelay read rd7b at		22231
+
+; lexicon 480l, fat plate
+; early reflections iir/fir 
+; left		
+xdelay write wrt12a at	22232	
+xdelay read rd12a at		23695
+xdelay read rd13a at		23754
+xdelay read rd14a at		23813
+xdelay read rd15a at 		23872
+xdelay read rd16a at		23896
+xdelay read rd17a at		23931
+xdelay read rd18a at		23955
+xdelay read rd19a at		23990
+		
+; right		
+xdelay write wrt12b at	23991	
+xdelay read rd12b at		25455
+xdelay read rd13b at		25540
+xdelay read rd14b at		25625
+xdelay read rd15b at 		25687
+xdelay read rd16b at		25710
+xdelay read rd17b at		25772
+xdelay read rd18b at		25789
+xdelay read rd19b at		25874
+
+itramsize	3218	
+; allpasses iir
+; left		
+idelay write wrt8a at	0	
+idelay read rd8a at		224
+idelay write wrt9a at	225	
+idelay read rd9a at		780
+idelay write wrt10a at	781	
+idelay read rd10a at	1221
+idelay write wrt11a at	1222	
+idelay read rd11a at	1562
+
+; right		
+idelay write wrt8b at	1563	
+idelay read rd8b at		1811
+idelay write wrt9b at	1812	
+idelay read rd9b at		2390
+idelay write wrt10b at	2391	
+idelay read rd10b at	2854
+idelay write wrt11b at	2855	
+idelay read rd11b at	3218
+
+; input level
+macs ina, 0, in1, input_level ; default 0.5
+macs inb, 0, in2, input_level
+
+; add early reflections
+; left       
+macs wrt12a, ina, rd19a, 0.2
+macs ga, 0,  rd12a,-0.288939708
+macs ga, ga, rd13a,-0.320484648
+macs ga, ga, rd14a,-0.193111097
+macs ga, ga, rd15a,	0.10859435
+macs ga, ga, rd16a,-0.086259558
+macs ga, ga, rd17a,	0.064685543
+macs ga, ga, rd18a,-0.085272153
+macs ga, ga, rd19a,	0.040346627
+
+; right
+macs wrt12b, inb, rd19b, 0.2
+macs gb, 0,  rd12b,-0.151241118
+macs gb, gb, rd13b,	0.165832589
+macs gb, gb, rd14b,-0.101081081
+macs gb, gb, rd15b,-0.013172551
+macs gb, gb, rd16b,	0.056842069
+macs gb, gb, rd17b,	0.004165526
+macs gb, gb, rd18b,-0.181831818
+macs gb, gb, rd19b,	0.201683273
+                   
+; early reflections level
+macs ga, 0, ga, early_level 
+macs gb, 0, gb, early_level
+
+; late input + early reflections 
+macs ina, ina, ga, 0.5
+macs inb, inb, gb, 0.5
+   
+; trim sliders
+log f, late_decay, 0x3, 0 ; logaritmic decay fader
+ 
+; 8 delay lines (comb filters with lowpass damping)
+; left 
+macs wrt0a, ina, a0a, f ; decay set to 
+interp a0a, a0a, late_damp, rd0a ; lp damping set to 
+macs wrt1a, ina, a1a, f
+interp a1a, a1a, late_damp, rd1a
+macs wrt2a, ina, a2a, f
+interp a2a, a2a, late_damp, rd2a
+macs wrt3a, ina, a3a, f 
+interp a3a, a3a, late_damp, rd3a
+macs wrt4a, ina, a4a, f
+interp a4a, a4a, late_damp, rd4a 
+macs wrt5a, ina, a5a, f
+interp a5a, a5a, late_damp, rd5a   
+macs wrt6a, ina, a6a, f
+interp a6a, a6a, late_damp, rd6a 
+macs wrt7a, ina, a7a, f
+interp a7a, a7a, late_damp, rd7a  
+  
+; right   
+macs wrt0b, inb, a0b, f ; decay set to 
+interp a0b, a0b, late_damp, rd0b ; lp damping set to 
+macs wrt1b, inb, a1b, f
+interp a1b, a1b, late_damp, rd1b
+macs wrt2b, inb, a2b, f
+interp a2b, a2b, late_damp, rd2b
+macs wrt3b, inb, a3b, f 
+interp a3b, a3b, late_damp, rd3b
+macs wrt4b, inb, a4b, f
+interp a4b, a4b, late_damp, rd4b 
+macs wrt5b, inb, a5b, f
+interp a5b, a5b, late_damp, rd5b   
+macs wrt6b, inb, a6b, f
+interp a6b, a6b, late_damp, rd6b 
+macs wrt7b, inb, a7b, f
+interp a7b, a7b, late_damp, rd7b
+    
+; add & gain taps 
+; left
+macs b1a, 0, a0a, 0.125
+macs b1a, b1a, a1a, 0.125   ; post gain
+macs b1a, b1a, a2a, 0.125
+macs b1a, b1a, a3a, 0.125 
+macs b1a, b1a, a4a, 0.125
+macs b1a, b1a, a5a, 0.125 
+macs b1a, b1a, a6a, 0.125
+macs b1a, b1a, a7a, 0.125
+    
+; right
+macs b1b, 0, a0b, 0.125
+macs b1b, b1b, a1b, 0.125   ; post gain
+macs b1b, b1b, a2b, 0.125
+macs b1b, b1b, a3b, 0.125 
+macs b1b, b1b, a4b, 0.125
+macs b1b, b1b, a5b, 0.125 
+macs b1b, b1b, a6b, 0.125
+macs b1b, b1b, a7b, 0.125
+
+; allpasses (fixed feedback), diffusor
+; left
+macsn h, b1a, rd8a, ap_q ; ap 1
+macs wrt8a, h, 0, 0 
+macs d1a, rd8a, h, ap_q   
+ 
+macsn h, d1a, rd9a, ap_q ; ap 2
+macs wrt9a, h, 0, 0 
+macs d2a, rd9a, h, ap_q 
+ 
+macsn h, d2a, rd10a, ap_q ; ap 3
+macs wrt10a, h, 0, 0 
+macs d3a, rd10a, h, ap_q 
+ 
+macsn h, d3a, rd11a, ap_q ; ap 4
+macs wrt11a, h, 0, 0 
+macs d4a, rd11a, h, ap_q 
+  
+; right
+macsn h, b1b, rd8b, ap_q ; ap 1
+macs wrt8b, h, 0, 0 
+macs d1b, rd8b, h, ap_q   
+ 
+macsn h, d1b, rd9b, ap_q ; ap 2
+macs wrt9b, h, 0, 0 
+macs d2b, rd9b, h, ap_q 
+ 
+macsn h, d2b, rd10b, ap_q ; ap 3
+macs wrt10b, h, 0, 0 
+macs d3b, rd10b, h, ap_q 
+ 
+macsn h, d3b, rd11b, ap_q ; ap 4
+macs wrt11b, h, 0, 0 
+macs d4b, rd11b, h, ap_q   
+
+; late reflections level
+macs d4a, 0, d4a, late_level  
+macs d4b, 0, d4b, late_level
+  
+; mix late & early reflections
+macs d4a, d4a, ga, 1
+macs d4b, d4b, gb, 1
+
+; lowpass
+; left
+macs d4a, d4a, ea, lp_q   ; q
+interp ea, ea, lp_cut, d4a  ; cutoff   
+  
+; right
+macs d4b, d4b, eb, lp_q   ; q
+interp eb, eb, lp_cut, d4b  ; cutoff     
+  
+; output mix
+interp out1, in1, dry_wet, ea
+interp out2, in2, dry_wet, eb
+
+end               
+
+
+
