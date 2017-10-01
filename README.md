@@ -7,6 +7,8 @@ kX驱动安装手册
 
 * 驱动版本 kX 3552
 
+* 点击页面右侧`Clone or download`并选择`Download ZIP`下载本项目所有文件
+
 * 欢迎提交`issue`或`pull request`参与改进本手册
 
 卸载已安装的 kX 驱动程序
